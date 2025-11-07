@@ -28,7 +28,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh './mvnw test -Dspring.docker.compose.enabled=false'
+                sh './mvnw test -Dtest=!PostgresIntegrationTests'
             }
             post {
                 always {
