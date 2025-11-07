@@ -49,6 +49,26 @@ pipeline {
             }
         }
         
+        stage('Push to Docker Hub') {
+            steps {
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh '''
+                        echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker push ${DOCKER_IMAGE}
+                        docker logout
+                    '''
+                }
+            }
+        }
+        
+        stage('Trivy Security Scan') {
+            steps {
+                sh '''
+                    trivy image --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true
+                '''
+            }
+        }
+        
         stage('Archive') {
             steps {
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
@@ -58,7 +78,7 @@ pipeline {
     
     post {
         success {
-            echo 'Build completed successfully! Docker image: ${DOCKER_IMAGE}'
+            echo 'Full pipeline completed! Docker image pushed: ${DOCKER_IMAGE}'
         }
         failure {
             echo 'Build failed!'
