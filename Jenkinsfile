@@ -28,7 +28,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh './mvnw test --exclude-tests=*IntegrationTests'
+                sh './mvnw test -Dspring.docker.compose.enabled=false'
             }
             post {
                 always {
