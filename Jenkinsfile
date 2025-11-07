@@ -69,6 +69,20 @@ pipeline {
             }
         }
         
+        stage('Deploy with Docker Compose') {
+            steps {
+                sh '''
+                    cd ${WORKSPACE}
+                    docker-compose -f docker-compose.yml down || true
+                    docker pull ${DOCKER_IMAGE}
+                    docker tag ${DOCKER_IMAGE} taibmh/spring-petclinic:latest
+                    docker-compose -f docker-compose.yml up -d
+                    sleep 10
+                    docker-compose -f docker-compose.yml ps
+                '''
+            }
+        }
+        
         stage('Archive') {
             steps {
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
@@ -78,7 +92,7 @@ pipeline {
     
     post {
         success {
-            echo 'Full pipeline completed! Docker image pushed: ${DOCKER_IMAGE}'
+            echo 'Full CI/CD pipeline completed! App deployed at http://192.168.56.10:8081'
         }
         failure {
             echo 'Build failed!'
