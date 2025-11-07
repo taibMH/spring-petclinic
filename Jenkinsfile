@@ -92,7 +92,7 @@ pipeline {
     
     post {
         success {
-            echo 'Full CI/CD pipeline completed! App deployed at http://192.168.56.10:8081'
+            echo 'Full CI/CD pipeline completed!'
         }
         failure {
             echo 'Build failed!'
