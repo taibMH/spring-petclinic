@@ -1,4 +1,4 @@
-FROM eclipse-temurin:25-jdk-slim
+FROM eclipse-temurin:25-jdk
 
 EXPOSE 8080
 
