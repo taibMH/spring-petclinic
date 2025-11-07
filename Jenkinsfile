@@ -3,7 +3,7 @@ pipeline {
     
     tools {
         jdk 'JAVA_HOME'
-        maven 'M2_HOME'
+	maven 'M2_HOME'
     }
     
     environment {
@@ -28,7 +28,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh './mvnw test -Dspring.docker.compose.skip.in-tests=true'
+                sh './mvnw test'
             }
             post {
                 always {
@@ -65,4 +65,3 @@ pipeline {
         }
     }
 }
-
