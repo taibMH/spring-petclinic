@@ -2,8 +2,13 @@ pipeline {
     agent any
     
     tools {
-        maven 'M2_HOME'    // Use the exact name from Jenkins tools config
-        jdk 'JAVA_HOME'    // Use the exact name from Jenkins tools config
+        jdk 'JDK-25'
+        maven 'M2_HOME'
+    }
+    
+    environment {
+        DOCKER_IMAGE = "taibMH/spring-petclinic:${BUILD_NUMBER}"
+        DOCKER_REGISTRY = "docker.io"
     }
     
     stages {
@@ -38,6 +43,12 @@ pipeline {
             }
         }
         
+        stage('Build Docker Image') {
+            steps {
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+            }
+        }
+        
         stage('Archive') {
             steps {
                 archiveArtifacts artifacts: '**/target/*.jar', fingerprint: true
@@ -47,7 +58,7 @@ pipeline {
     
     post {
         success {
-            echo 'Build completed successfully!'
+            echo 'Build completed successfully! Docker image: ${DOCKER_IMAGE}'
         }
         failure {
             echo 'Build failed!'
