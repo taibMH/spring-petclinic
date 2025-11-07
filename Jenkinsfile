@@ -7,7 +7,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = "taibMH/spring-petclinic:${BUILD_NUMBER}"
+        DOCKER_IMAGE = "taibmh/spring-petclinic:${BUILD_NUMBER}"
         DOCKER_REGISTRY = "docker.io"
     }
     
