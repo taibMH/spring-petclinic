@@ -28,7 +28,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh './mvnw test'
+                sh './mvnw test -Dspring.docker.compose.skip.in-tests=true'
             }
             post {
                 always {
