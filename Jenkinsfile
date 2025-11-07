@@ -2,8 +2,8 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven 3.6.3'  // Must match the Maven installation name in Jenkins
-        jdk 'JDK 17'         // Must match the JDK installation name in Jenkins
+        maven 'M2_HOME'    // Use the exact name from Jenkins tools config
+        jdk 'JAVA_HOME'    // Use the exact name from Jenkins tools config
     }
     
     stages {
@@ -54,3 +54,4 @@ pipeline {
         }
     }
 }
+
