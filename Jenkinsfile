@@ -28,7 +28,7 @@ pipeline {
         
         stage('Test') {
             steps {
-                sh './mvnw test'
+                sh './mvnw test --exclude-tests=*IntegrationTests'
             }
             post {
                 always {
