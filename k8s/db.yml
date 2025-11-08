@@ -10,8 +10,8 @@ stringData:
   host: "demo-db"
   port: "5432"
   database: "petclinic"
-  username: "user"
-  password: "pass"
+  username: "petclinic"
+  password: "petclinic"
 
 ---
 apiVersion: v1
@@ -62,12 +62,25 @@ spec:
           ports:
             - containerPort: 5432
               name: postgresql
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
           livenessProbe:
             tcpSocket:
               port: postgresql
+            initialDelaySeconds: 30
+            periodSeconds: 10
           readinessProbe:
             tcpSocket:
               port: postgresql
+            initialDelaySeconds: 10
+            periodSeconds: 5
           startupProbe:
             tcpSocket:
               port: postgresql
+            failureThreshold: 30
+            periodSeconds: 10

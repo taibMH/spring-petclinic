@@ -8,6 +8,7 @@ spec:
   ports:
     - port: 80
       targetPort: 8080
+      nodePort: 30080
   selector:
     app: petclinic
 
@@ -19,7 +20,7 @@ metadata:
   labels:
     app: petclinic
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app: petclinic
@@ -29,36 +30,42 @@ spec:
         app: petclinic
     spec:
       containers:
-        - name: workload
-          image: dsyer/petclinic
+        - name: petclinic
+          image: taibmh/spring-petclinic:18
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: postgres
-            - name: SERVICE_BINDING_ROOT
-              value: /bindings
-            - name: SPRING_APPLICATION_JSON
-              value: |
-                {
-                  "management.endpoint.health.probes.add-additional-paths": true
-                }
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://demo-db:5432/petclinic
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: password
           ports:
             - name: http
               containerPort: 8080
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "500m"
+            limits:
+              memory: "1Gi"
+              cpu: "1000m"
           livenessProbe:
             httpGet:
-              path: /livez
+              path: /
               port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
           readinessProbe:
             httpGet:
-              path: /readyz
+              path: /
               port: http
-          volumeMounts:
-            - mountPath: /bindings/secret
-              name: binding
-              readOnly: true
-      volumes:
-        - name: binding
-          projected:
-            sources:
-              - secret:
-                  name: demo-db
+            initialDelaySeconds: 40
+            periodSeconds: 5

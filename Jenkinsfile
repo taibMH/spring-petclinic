@@ -69,16 +69,12 @@ pipeline {
             }
         }
         
-        stage('Deploy with Docker Compose') {
+        stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    cd ${WORKSPACE}
-                    docker-compose -f docker-compose.yml down || true
-                    docker pull ${DOCKER_IMAGE}
-                    docker tag ${DOCKER_IMAGE} taibmh/spring-petclinic:latest
-                    docker-compose -f docker-compose.yml up -d
-                    sleep 10
-                    docker-compose -f docker-compose.yml ps
+		    kubectl set image deployment/petclinic petclinic=${DOCKER_IMAGE} --record
+                    kubectl rollout status deployment/petclinic --timeout=120s
+                    kubectl get pods -l app=petclinic
                 '''
             }
         }
