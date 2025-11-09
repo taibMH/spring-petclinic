@@ -72,9 +72,11 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-		    kubectl set image deployment/petclinic petclinic=${DOCKER_IMAGE} --record
-                    kubectl rollout status deployment/petclinic --timeout=120s
-                    kubectl get pods -l app=petclinic
+                    su - vagrant -c "kubectl apply -f k8s/db.yml"
+                    su - vagrant -c "kubectl set image deployment/petclinic petclinic=${DOCKER_IMAGE} --record"
+                    su - vagrant -c "kubectl rollout status deployment/petclinic --timeout=120s"
+                    su - vagrant -c "kubectl get pods -l app=petclinic"
+                    su - vagrant -c "kubectl get svc petclinic"
                 '''
             }
         }
