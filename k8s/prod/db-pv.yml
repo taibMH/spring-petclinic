@@ -11,12 +11,13 @@ spec:
   accessModes:
     - ReadWriteOnce
   hostPath:
-    path: "/mnt/data/postgres"
+    path: "/mnt/data/postgres-prod"
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pv-prodc
+  name: postgres-pvc-prod
+  namespace: prod
 spec:
   storageClassName: manual
   accessModes:
