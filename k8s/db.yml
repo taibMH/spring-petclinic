@@ -41,8 +41,11 @@ spec:
         app: demo-db
     spec:
       containers:
-        - image: postgres:18.0
-          name: postgresql
+        - name: postgresql
+          image: postgres:18.0
+          ports:
+            - containerPort: 5432
+              name: postgresql
           env:
             - name: POSTGRES_USER
               valueFrom:
@@ -59,9 +62,9 @@ spec:
                 secretKeyRef:
                   name: demo-db
                   key: database
-          ports:
-            - containerPort: 5432
-              name: postgresql
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: postgres-storage
           resources:
             requests:
               memory: "256Mi"
@@ -84,3 +87,7 @@ spec:
               port: postgresql
             failureThreshold: 30
             periodSeconds: 10
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
