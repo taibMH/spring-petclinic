@@ -31,22 +31,16 @@ spec:
     spec:
       containers:
         - name: petclinic-prod
-          image: taibmh/spring-petclinic-prod:18
+          image: taibmh/spring-petclinic:latest
+          envFrom:
+          - configMapRef:
+              name: petclinic-prod-config
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: postgres
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:postgresql://demo-db:5432/petclinic-prod
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: demo-db
-                  key: username
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: demo-db
-                  key: password
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: demo-db-prod
+                key: password
           ports:
             - name: http
               containerPort: 8080

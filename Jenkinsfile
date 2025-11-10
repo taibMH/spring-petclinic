@@ -91,7 +91,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
                     sh '''
                         echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
+                        docker tag ${DOCKER_IMAGE} taibmh/spring-petclinic:latest
                         docker push ${DOCKER_IMAGE}
+                        docker push taibmh/spring-petclinic:latest
                         docker logout
                     '''
                 }
