@@ -73,7 +73,7 @@ pipeline {
             steps {
                 sh '''
                     kubectl apply -f k8s/db.yml
-                    kubectl delete pods -l app=petclinic --grace-period=0 --force || true
+                    kubectl get replicaset -l app=petclinic -o jsonpath='{.items[*].metadata.name}' | xargs -r kubectl delete replicaset || true
                     sleep 10
                     sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/petclinic.yml
                     kubectl apply -f k8s/petclinic.yml
