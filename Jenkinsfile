@@ -74,8 +74,9 @@ pipeline {
                 sh '''
                     kubectl apply -f k8s/db.yml
                     kubectl delete pods -l app=petclinic --grace-period=0 --force || true
-                    sleep 5
-                    kubectl set image deployment/petclinic petclinic=${DOCKER_IMAGE} --record
+                    sleep 10
+                    sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/petclinic.yml
+                    kubectl apply -f k8s/petclinic.yml
                     kubectl rollout status deployment/petclinic --timeout=120s
                     kubectl get pods -l app=petclinic
                     kubectl get svc petclinic
