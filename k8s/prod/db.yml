@@ -1,0 +1,93 @@
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: demo-db-prod
+type: servicebinding.io/postgresql
+stringData:
+  type: "postgresql"
+  provider: "postgresql"
+  host: "demo-db-prod"
+  port: "5432"
+  database: "petclinic"
+  username: "petclinic"
+  password: "petclinic"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: demo-db-prod
+spec:
+  ports:
+    - port: 5432
+  selector:
+    app: demo-db-prod
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-db-prod
+  labels:
+    app: demo-db-prod
+spec:
+  selector:
+    matchLabels:
+      app: demo-db-prod
+  template:
+    metadata:
+      labels:
+        app: demo-db-prod
+    spec:
+      containers:
+        - name: postgresql
+          image: postgres:18.0
+          ports:
+            - containerPort: 5432
+              name: postgresql
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db-prod
+                  key: username
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db-prod
+                  key: password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db-prod
+                  key: database
+          volumeMounts:
+            - mountPath: /var/lib/postgresql
+              name: postgres-storage
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
+          livenessProbe:
+            tcpSocket:
+              port: postgresql
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            tcpSocket:
+              port: postgresql
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          startupProbe:
+            tcpSocket:
+              port: postgresql
+            failureThreshold: 30
+            periodSeconds: 10
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc

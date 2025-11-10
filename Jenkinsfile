@@ -1,5 +1,9 @@
 pipeline {
     agent any
+
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['dev', 'prod'], description: 'Target environment')
+    }
     
     tools {
         jdk 'JAVA_HOME'
@@ -9,6 +13,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = "taibmh/spring-petclinic:${BUILD_NUMBER}"
         DOCKER_REGISTRY = "docker.io"
+        K8S_NAMESPACE = "${params.ENVIRONMENT}"
     }
     
     stages {
@@ -104,14 +109,14 @@ pipeline {
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
-                    kubectl apply -f k8s/db.yml
-                    kubectl get replicaset -l app=petclinic -o jsonpath='{.items[*].metadata.name}' | xargs -r kubectl delete replicaset || true
+                    kubectl apply -f k8s/${K8S_NAMESPACE}/ -n ${K8S_NAMESPACE}
+                    kubectl get replicaset -l app=petclinic -n ${K8S_NAMESPACE} -o jsonpath='{.items[*].metadata.name}' | xargs -r kubectl delete replicaset -n ${K8S_NAMESPACE} || true
                     sleep 10
-                    sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/petclinic.yml
-                    kubectl apply -f k8s/petclinic.yml
-                    kubectl rollout status deployment/petclinic --timeout=120s
-                    kubectl get pods -l app=petclinic
-                    kubectl get svc petclinic
+                    sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/${K8S_NAMESPACE}/petclinic.yml
+                    kubectl apply -f k8s/${K8S_NAMESPACE}/petclinic.yml -n ${K8S_NAMESPACE}
+                    kubectl rollout status deployment/petclinic -n ${K8S_NAMESPACE} --timeout=120s
+                    kubectl get pods -l app=petclinic -n ${K8S_NAMESPACE}
+                    kubectl get svc petclinic -n ${K8S_NAMESPACE}
                 '''
             }
         }

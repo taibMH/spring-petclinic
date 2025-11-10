@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: petclinic-prod
+spec:
+  type: NodePort
+  ports:
+    - port: 80
+      targetPort: 8080
+      nodePort: 30081
+  selector:
+    app: petclinic-prod
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: petclinic-prod
+  labels:
+    app: petclinic-prod
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: petclinic-prod
+  template:
+    metadata:
+      labels:
+        app: petclinic-prod
+    spec:
+      containers:
+        - name: petclinic-prod
+          image: taibmh/spring-petclinic-prod:18
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: postgres
+            - name: SPRING_DATASOURCE_URL
+              value: jdbc:postgresql://demo-db:5432/petclinic-prod
+            - name: SPRING_DATASOURCE_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: username
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: demo-db
+                  key: password
+          ports:
+            - name: http
+              containerPort: 8080
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 40
+            periodSeconds: 5
