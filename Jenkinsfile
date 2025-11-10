@@ -103,11 +103,18 @@ pipeline {
         stage('Trivy Security Scan') {
             steps {
                 sh '''
-                    trivy image --severity HIGH,CRITICAL ${DOCKER_IMAGE} || true
+                    trivy image --severity HIGH,CRITICAL --format json --output trivy-report.json ${DOCKER_IMAGE}
+                    trivy image --severity HIGH,CRITICAL --format table ${DOCKER_IMAGE}
                 '''
             }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-report.json', fingerprint: true
+                }
+            }
         }
-        
+
+                    
         stage('Deploy to Kubernetes') {
             steps {
                 sh '''
