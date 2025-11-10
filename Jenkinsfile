@@ -31,6 +31,29 @@ pipeline {
                 sh './mvnw clean compile'
             }
         }
+        stage('OWASP Dependency-Check') {
+            steps {
+                sh '''
+                    dependency-check --project "PetClinic" \
+                        --scan . \
+                        --format HTML \
+                        --format JSON \
+                        --out dependency-check-report \
+                        --suppression suppression.xml || true
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'dependency-check-report/*', fingerprint: true
+                    publishHTML(target: [
+                        reportDir: 'dependency-check-report',
+                        reportFiles: 'dependency-check-report.html',
+                        reportName: 'OWASP Dependency-Check Report'
+                    ])
+                }
+            }
+        }
+
         
         stage('Test') {
             steps {
