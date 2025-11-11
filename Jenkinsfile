@@ -34,12 +34,14 @@ pipeline {
 
         stage('OWASP Dependency-Check') {
             steps {
-                dependencyCheck(
-                    odcInstallation: 'owasp-dependency',
-                    additionalArguments: '--suppression suppression.xml --enableRetired --format HTML --format XML --scan .',
-                    stopBuild: false,
-                    skipOnScmChange: false
-                )
+                withCredentials([string(credentialsId: 'nvd-api-key', variable: 'NVD_API_KEY')]) {
+                    dependencyCheck(
+                        odcInstallation: 'owasp-dependency',
+                        additionalArguments: '--suppression suppression.xml --enableRetired --format HTML --format XML --scan . --nvdApiKey ${NVD_API_KEY}',
+                        stopBuild: false,
+                        skipOnScmChange: false
+                    )
+                }
             }
             post {
                 always {
@@ -53,6 +55,23 @@ pipeline {
                 }
             }
         }
+
+        stage('Secrets Scan (Gitleaks)') {
+          agent {
+            docker { image 'zricethezav/gitleaks:latest' }
+          }
+          steps {
+            sh '''
+              gitleaks detect -s . --config-path=.gitleaks.toml --report-format=json --report-path=gitleaks-report.json
+            '''
+          }
+          post {
+            always {
+              archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
+            }
+          }
+        }
+
         
         stage('Test') {
             steps {
