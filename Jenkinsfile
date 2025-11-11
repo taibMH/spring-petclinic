@@ -45,12 +45,7 @@ pipeline {
             }
             post {
                 always {
-                    dependencyCheckPublisher(
-                        pattern: 'dependency-check-report.xml',
-                        canComputeNew: false,
-                        mustRun: true,
-                        overwritePrevious: true
-                    )
+                    dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
                     archiveArtifacts artifacts: 'dependency-check-report.*', allowEmptyArchive: true
                 }
             }
