@@ -57,19 +57,14 @@ pipeline {
         }
 
         stage('Secrets Scan (Gitleaks)') {
-          agent {
-            docker { image 'zricethezav/gitleaks:latest' }
-          }
-          steps {
-            sh '''
-              gitleaks detect -s . --config-path=.gitleaks.toml --report-format=json --report-path=gitleaks-report.json
-            '''
-          }
-          post {
-            always {
-              archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
+            steps {
+                sh 'gitleaks detect -s . --report-format=json --report-path=gitleaks-report.json'
             }
-          }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
+                }
+            }
         }
 
         
