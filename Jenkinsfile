@@ -34,21 +34,24 @@ pipeline {
 
         stage('OWASP Dependency-Check') {
             steps {
-                dependencyCheck additionalArguments: '--suppression suppression.xml',
-                                odcInstallation: 'owasp-dependency',
-                                scanPath: '.',
-                                skipOnError: false,
-                                zipExtensionsAllowed: true,
-                                healthy: '0',
-                                unHealthy: '1',
-                                failed: '10'
+                dependencyCheck(
+                    odcInstallation: 'owasp-dependency',    // Your tool install name
+                    additionalArguments: '--suppression suppression.xml --enableRetired --format HTML --format XML --scan .',
+                    skipOnScmChange: false,
+                    failBuildOnCVSS: 7,
+                    failBuildOnAnyVulnerability: false
+                )
             }
             post {
                 always {
-                    dependencyCheckPublisher pattern: '**/dependency-check-report/*.xml',
-                                            canComputeNew: false,
-                                            mustRun: true,
-                                            overwritePrevious: true
+                    dependencyCheckPublisher(
+                        pattern: 'dependency-check-report.xml',
+                        failedTotalCritical: 0,
+                        canComputeNew: false,
+                        mustRun: true,
+                        overwritePrevious: true
+                    )
+                    archiveArtifacts artifacts: 'dependency-check-report.*', allowEmptyArchive: true
                 }
             }
         }
