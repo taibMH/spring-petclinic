@@ -31,29 +31,27 @@ pipeline {
                 sh './mvnw clean compile'
             }
         }
+
         stage('OWASP Dependency-Check') {
             steps {
-                sh '''
-                    dependency-check --project "PetClinic" \
-                        --scan . \
-                        --format HTML \
-                        --format JSON \
-                        --out dependency-check-report \
-                        --suppression suppression.xml || true
-                '''
+                dependencyCheck additionalArguments: '--suppression suppression.xml',
+                                odcInstallation: 'owasp-dependency',
+                                scanPath: '.',
+                                skipOnError: false,
+                                zipExtensionsAllowed: true,
+                                healthy: '0',
+                                unHealthy: '1',
+                                failed: '10'
             }
             post {
                 always {
-                    archiveArtifacts artifacts: 'dependency-check-report/*', fingerprint: true
-                    publishHTML(target: [
-                        reportDir: 'dependency-check-report',
-                        reportFiles: 'dependency-check-report.html',
-                        reportName: 'OWASP Dependency-Check Report'
-                    ])
+                    dependencyCheckPublisher pattern: '**/dependency-check-report/*.xml',
+                                            canComputeNew: false,
+                                            mustRun: true,
+                                            overwritePrevious: true
                 }
             }
         }
-
         
         stage('Test') {
             steps {
