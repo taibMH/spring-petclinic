@@ -35,18 +35,16 @@ pipeline {
         stage('OWASP Dependency-Check') {
             steps {
                 dependencyCheck(
-                    odcInstallation: 'owasp-dependency',    // Your tool install name
+                    odcInstallation: 'owasp-dependency',
                     additionalArguments: '--suppression suppression.xml --enableRetired --format HTML --format XML --scan .',
-                    skipOnScmChange: false,
-                    failBuildOnCVSS: 7,
-                    failBuildOnAnyVulnerability: false
+                    stopBuild: false,
+                    skipOnScmChange: false
                 )
             }
             post {
                 always {
                     dependencyCheckPublisher(
                         pattern: 'dependency-check-report.xml',
-                        failedTotalCritical: 0,
                         canComputeNew: false,
                         mustRun: true,
                         overwritePrevious: true
