@@ -132,18 +132,19 @@ pipeline {
         }
         
         stage('Trivy Security Scan') {
-            steps {
-                sh '''
-                    trivy image --severity HIGH,CRITICAL --format json --output trivy-report.json ${DOCKER_IMAGE}
-                    trivy image --severity HIGH,CRITICAL --format table ${DOCKER_IMAGE}
-                '''
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'trivy-report.json', fingerprint: true
-                }
-            }
+    steps {
+        sh '''
+            trivy image --timeout 15m --severity HIGH,CRITICAL --format json --output trivy-report.json ${DOCKER_IMAGE}
+            trivy image --timeout 15m --severity HIGH,CRITICAL --format table ${DOCKER_IMAGE}
+        '''
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'trivy-report.json', fingerprint: true
         }
+    }
+}
+
 
                     
         stage('Deploy to Kubernetes') {
