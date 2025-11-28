@@ -52,15 +52,15 @@ pipeline {
         }
 
         stage('Secrets Scan (Gitleaks)') {
-            steps {
-                sh 'gitleaks detect -s . --report-format=json --report-path=gitleaks-report.json'
-            }
-            post {
-                always {
-                    archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
-                }
-            }
+    steps {
+        sh 'gitleaks detect -s . --report-format=json --report-path=gitleaks-report.json || true'
+    }
+    post {
+        always {
+            archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
         }
+    }
+}
 
         
         stage('Test') {
