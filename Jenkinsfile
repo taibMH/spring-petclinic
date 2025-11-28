@@ -174,8 +174,13 @@ pipeline {
         success {
             echo 'Full CI/CD pipeline completed!'
         }
-        failure {
-            echo 'Build failed!'
-        }
+            failure {
+        emailext (
+            subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+            body: "Check console output at ${env.BUILD_URL}",
+            to: 'souhail.aouadi@esprit.tn'
+        )
+    }
+
     }
 }
