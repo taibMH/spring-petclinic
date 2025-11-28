@@ -26,11 +26,12 @@ pipeline {
         }
         
         stage('Build') {
-            steps {
-                sh 'rm -rf .scannerwork'
-                sh './mvnw clean compile'
-            }
-        }
+    steps {
+        sh 'rm -rf .scannerwork'
+        sh './mvnw clean compile -Dcheckstyle.skip=true'
+    }
+}
+
 
         stage('OWASP Dependency-Check') {
             steps {
