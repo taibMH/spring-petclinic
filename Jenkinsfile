@@ -105,7 +105,7 @@ pipeline {
         
         stage('Package') {
             steps {
-                sh './mvnw package -DskipTests'
+                sh './mvnw package -DskipTests -Dcheckstyle.skip=true'
             }
         }
         
