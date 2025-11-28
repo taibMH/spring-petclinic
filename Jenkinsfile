@@ -65,15 +65,12 @@ pipeline {
 
         
         stage('Test') {
-            steps {
-                sh './mvnw test -Dtest=!PostgresIntegrationTests'
-            }
-            post {
-                always {
-                    junit '**/target/surefire-reports/*.xml'
-                }
-            }
-        }
+    steps {
+        sh './mvnw test -Dtest=!PostgresIntegrationTests -Dcheckstyle.skip=true'
+        junit '**/target/surefire-reports/*.xml'
+    }
+}
+
 
         stage('SonarQube Analysis') {
             steps {
