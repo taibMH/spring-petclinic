@@ -141,20 +141,20 @@ pipeline {
         }
                     
         stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                    kubectl apply -f k8s/${K8S_NAMESPACE}/ -n ${K8S_NAMESPACE}
-                    kubectl delete replicaset --all -n ${K8S_NAMESPACE} || true
-                    kubectl delete pod --field-selector=status.phase==Pending -n ${K8S_NAMESPACE} || true
-                    sleep 10
-                    sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/${K8S_NAMESPACE}/petclinic.yml
-                    kubectl apply -f k8s/${K8S_NAMESPACE}/petclinic.yml -n ${K8S_NAMESPACE}
-                    kubectl rollout status deployment/petclinic -n ${K8S_NAMESPACE} --timeout=180s
-                    kubectl get pods -l app=petclinic -n ${K8S_NAMESPACE}
-                    kubectl get svc petclinic -n ${K8S_NAMESPACE}
-                '''
-            }
-        }
+    steps {
+        sh '''
+            kubectl delete deployment petclinic -n ${K8S_NAMESPACE} --force --grace-period=0 || true
+            kubectl delete pod --all -n ${K8S_NAMESPACE} --force --grace-period=0 || true
+            sleep 15
+            kubectl apply -f k8s/${K8S_NAMESPACE}/ -n ${K8S_NAMESPACE}
+            sed -i "s|image: taibmh/spring-petclinic:.*|image: ${DOCKER_IMAGE}|g" k8s/${K8S_NAMESPACE}/petclinic.yml
+            kubectl apply -f k8s/${K8S_NAMESPACE}/petclinic.yml -n ${K8S_NAMESPACE}
+            kubectl rollout status deployment/petclinic -n ${K8S_NAMESPACE} --timeout=300s
+            kubectl get pods -l app=petclinic -n ${K8S_NAMESPACE}
+            kubectl get svc petclinic -n ${K8S_NAMESPACE}
+        '''
+    }
+}
 
         stage('DAST - OWASP ZAP') {
             steps {
