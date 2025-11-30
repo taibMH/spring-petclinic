@@ -7,7 +7,7 @@ pipeline {
     
     tools {
         jdk 'JAVA_HOME'
-	maven 'M2_HOME'
+        maven 'M2_HOME'
     }
     
     environment {
@@ -26,12 +26,11 @@ pipeline {
         }
         
         stage('Build') {
-    steps {
-        sh 'rm -rf .scannerwork'
-        sh './mvnw clean compile -Dcheckstyle.skip=true'
-    }
-}
-
+            steps {
+                sh 'rm -rf .scannerwork'
+                sh './mvnw clean compile -Dcheckstyle.skip=true'
+            }
+        }
 
         stage('OWASP Dependency-Check') {
             steps {
@@ -53,24 +52,22 @@ pipeline {
         }
 
         stage('Secrets Scan (Gitleaks)') {
-    steps {
-        sh 'gitleaks detect -s . --report-format=json --report-path=gitleaks-report.json || true'
-    }
-    post {
-        always {
-            archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
+            steps {
+                sh 'gitleaks detect -s . --report-format=json --report-path=gitleaks-report.json || true'
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'gitleaks-report.json', allowEmptyArchive: true
+                }
+            }
         }
-    }
-}
-
         
         stage('Test') {
-    steps {
-        sh './mvnw test -Dtest=!PostgresIntegrationTests -Dcheckstyle.skip=true'
-        junit '**/target/surefire-reports/*.xml'
-    }
-}
-
+            steps {
+                sh './mvnw test -Dtest=!PostgresIntegrationTests -Dcheckstyle.skip=true'
+                junit '**/target/surefire-reports/*.xml'
+            }
+        }
 
         stage('SonarQube Analysis') {
             steps {
@@ -130,20 +127,18 @@ pipeline {
         }
         
         stage('Trivy Security Scan') {
-    steps {
-        sh '''
-            trivy image --timeout 15m --severity HIGH,CRITICAL --format json --output trivy-report.json ${DOCKER_IMAGE}
-            trivy image --timeout 15m --severity HIGH,CRITICAL --format table ${DOCKER_IMAGE}
-        '''
-    }
-    post {
-        always {
-            archiveArtifacts artifacts: 'trivy-report.json', fingerprint: true
+            steps {
+                sh '''
+                    trivy image --timeout 15m --severity HIGH,CRITICAL --format json --output trivy-report.json ${DOCKER_IMAGE}
+                    trivy image --timeout 15m --severity HIGH,CRITICAL --format table ${DOCKER_IMAGE}
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'trivy-report.json', fingerprint: true
+                }
+            }
         }
-    }
-}
-
-
                     
         stage('Deploy to Kubernetes') {
             steps {
@@ -160,6 +155,45 @@ pipeline {
                 '''
             }
         }
+
+        stage('DAST - OWASP ZAP') {
+            steps {
+                script {
+                    def appUrl = sh(
+                        script: "kubectl get svc petclinic -n ${K8S_NAMESPACE} -o jsonpath='{.spec.ports[0].nodePort}'",
+                        returnStdout: true
+                    ).trim()
+                    
+                    def targetUrl = "http://10.0.2.15:${appUrl}"
+                    
+                    echo "Scanning ${targetUrl} with OWASP ZAP..."
+                    
+                    sh """
+                        docker run --rm \
+                            -v \$(pwd):/zap/wrk/:rw \
+                            owasp/zap2docker-stable \
+                            zap-baseline.py \
+                            -t ${targetUrl} \
+                            -r zap-report.html \
+                            -l PASS || true
+                    """
+                }
+            }
+            post {
+                always {
+                    publishHTML([
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: true,
+                        keepAll: true,
+                        reportDir: '.',
+                        reportFiles: 'zap-report.html',
+                        reportName: 'OWASP ZAP DAST Report',
+                        reportTitles: 'ZAP Security Scan'
+                    ])
+                    archiveArtifacts artifacts: 'zap-report.html', allowEmptyArchive: true
+                }
+            }
+        }
         
         stage('Archive') {
             steps {
@@ -172,13 +206,13 @@ pipeline {
         success {
             echo 'Full CI/CD pipeline completed!'
         }
-            failure {
-        emailext (
-            subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
-            body: "Check console output at ${env.BUILD_URL}",
-            to: 'souzoart@gmail.com'
-        )
-    }
-
+        failure {
+            emailext (
+                subject: "Build Failed: ${env.JOB_NAME} #${env.BUILD_NUMBER}",
+                body: "Check console output at ${env.BUILD_URL}",
+                to: 'souzoart@gmail.com'
+            )
+        }
     }
 }
+
